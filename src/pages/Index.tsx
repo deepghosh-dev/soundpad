@@ -1,101 +1,71 @@
-import { useState, useMemo } from 'react';
-import { useAudioEngine } from '@/hooks/useAudioEngine';
-import { SoundCard } from '@/components/SoundCard';
-import { ControlBar } from '@/components/ControlBar';
+import { useAudioPlayer } from '@/hooks/useAudioPlayer';
+import { Header } from '@/components/Header';
 import { DropZone } from '@/components/DropZone';
-import { SettingsPanel } from '@/components/SettingsPanel';
+import { SoundGrid } from '@/components/SoundGrid';
 
 const Index = () => {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  
   const {
-    sounds,
-    settings,
-    addSound,
-    removeSound,
-    playSound,
-    stopSound,
-    stopAllSounds,
-    setSoundVolume,
-    seekSound,
-    toggleLoop,
-    setHotkey,
-    updateSettings,
-  } = useAudioEngine();
+    audioFiles,
+    playingIds,
+    volume,
+    addAudioFiles,
+    removeAudioFile,
+    clearAllAudio,
+    toggleAudio,
+    stopAll,
+    updateVolume,
+  } = useAudioPlayer();
 
-  const playingCount = useMemo(
-    () => sounds.filter(s => s.isPlaying).length,
-    [sounds]
-  );
-
-  const handleFilesAdded = async (files: File[]) => {
-    for (const file of files) {
-      await addSound(file);
-    }
-  };
+  const hasFiles = audioFiles.length > 0;
 
   return (
-    <div className="min-h-screen relative">
-      <ControlBar
-        settings={settings}
-        soundCount={sounds.length}
-        playingCount={playingCount}
-        onUpdateSettings={updateSettings}
-        onStopAll={stopAllSounds}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+    <div className="min-h-screen bg-background wood-grain relative">
+      {/* Noise texture overlay */}
+      <div className="fixed inset-0 pointer-events-none noise-overlay" />
+      
+      <Header
+        volume={volume}
+        onVolumeChange={updateVolume}
+        onStopAll={stopAll}
+        onClearAll={clearAllAudio}
+        hasFiles={hasFiles}
+        playingCount={playingIds.size}
       />
 
-      <main className="container mx-auto px-4 py-8">
-        {sounds.length === 0 ? (
-          <div className="max-w-xl mx-auto animate-fade-in">
-            <DropZone onFilesAdded={handleFilesAdded} />
-            
-            {/* Decorative elements */}
-            <div className="mt-12 text-center space-y-4">
-              <div className="neon-line max-w-xs mx-auto" />
-              <p className="font-mono text-xs text-muted-foreground tracking-widest">
-                READY TO LOAD AUDIO FILES
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {/* Add more sounds button */}
-            <div className="flex justify-end">
-              <DropZone onFilesAdded={handleFilesAdded} compact />
-            </div>
+      <main className="container mx-auto px-4 py-8 relative">
+        <DropZone onFilesAdded={addAudioFiles} hasFiles={hasFiles} />
 
-            {/* Sound Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {sounds.map((sound, index) => (
-                <div
-                  key={sound.id}
-                  className="animate-scale-in"
-                  style={{ animationDelay: `${index * 50}ms` }}
-                >
-                  <SoundCard
-                    sound={sound}
-                    onPlay={() => playSound(sound.id)}
-                    onStop={() => stopSound(sound.id)}
-                    onRemove={() => removeSound(sound.id)}
-                    onVolumeChange={(v) => setSoundVolume(sound.id, v)}
-                    onSeek={(t) => seekSound(sound.id, t)}
-                    onToggleLoop={() => toggleLoop(sound.id)}
-                    onSetHotkey={(h) => setHotkey(sound.id, h)}
-                  />
-                </div>
-              ))}
+        {hasFiles && (
+          <div className="mt-2">
+            <SoundGrid
+              audioFiles={audioFiles}
+              playingIds={playingIds}
+              onToggle={toggleAudio}
+              onRemove={removeAudioFile}
+            />
+          </div>
+        )}
+
+        {!hasFiles && (
+          <div className="mt-12 text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded bg-muted/30 border border-border/50">
+              <span className="text-xl">📼</span>
+              <p className="text-muted-foreground text-sm">
+                Pro tip: Organize your sounds in folders for quick loading
+              </p>
             </div>
           </div>
         )}
       </main>
 
-      <SettingsPanel
-        isOpen={isSettingsOpen}
-        settings={settings}
-        onClose={() => setIsSettingsOpen(false)}
-        onUpdateSettings={updateSettings}
-      />
+      {/* Warm ambient glow effects */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-primary/3 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[80px]" />
+      </div>
+      
+      {/* Bottom decorative strip */}
+      <div className="fixed bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
     </div>
   );
 };

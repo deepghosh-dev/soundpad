@@ -1,18 +1,15 @@
-export interface SoundFile {
+export interface AudioFile {
   id: string;
   name: string;
+  displayName: string;
   file: File;
   url: string;
-  duration: number;
-  currentTime: number;
-  hotkey?: string;
-  volume: number;
-  isPlaying: boolean;
-  isLooping: boolean;
+  duration?: number;
+  keyBinding?: string;
 }
 
-export interface AudioSettings {
-  masterVolume: number;
-  isMuted: boolean;
-  selectedOutputDevice: string;
+export interface AudioState {
+  isPlaying: boolean;
+  currentTime: number;
+  duration: number;
 }
